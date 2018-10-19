@@ -1,7 +1,7 @@
 const axios = require('axios');
 const bcrypt = require('bcryptjs')
 
-const { authenticate } = require('./middlewares');
+const { authenticate, generateToken } = require('./middlewares');
 
 const db = require('../database/dbConfig.js')
 
@@ -11,7 +11,6 @@ module.exports = server => {
   server.get('/api/jokes', authenticate, getJokes);
   server.get('/api/users', users)
 };
-
 
 function register(req, res) {
   const user = req.body
@@ -23,28 +22,48 @@ function register(req, res) {
     .insert(user)
     .then(response => {
       console.log(response);
-      res.status(201).send(response)
+      const token = generateToken(response)
+      res.status(201).json({response, token})
     })
     .catch(err => {
       console.log(err.message);
-      res.status(400).send(err.message)
+      res.status(400).json({message: err.message})
     })
 
 }
 
 function login(req, res) {
-  // implement user login
+  const creds = req.body
+
+  db('users')
+    .where({ username: creds.username })
+    .first()
+    .then(user => {
+      if (user && bcrypt.compareSync(creds.password, user.password)){
+        const token = generateToken(user)
+        res.status(200).send({ welcome: creds.username, token })
+      } else {
+        res.status(401).send({ message: 'Unauthorized'})
+      }
+    })
+    .catch(err => {
+      console.error(err.message);
+      res.status(400).send({ message: err.message })
+    })
 }
 
 function getJokes(req, res) {
+  console.log('get jokes firing');
   axios
     .get(
       'https://08ad1pao69.execute-api.us-east-1.amazonaws.com/dev/random_ten'
     )
     .then(response => {
+      console.log('wowi');
       res.status(200).json(response.data);
     })
     .catch(err => {
+      console.log('here');
       res.status(500).json({ message: 'Error Fetching Jokes', error: err });
     });
 }
