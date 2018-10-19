@@ -53,17 +53,14 @@ function login(req, res) {
 }
 
 function getJokes(req, res) {
-  console.log('get jokes firing');
   axios
     .get(
       'https://08ad1pao69.execute-api.us-east-1.amazonaws.com/dev/random_ten'
     )
     .then(response => {
-      console.log('wowi');
       res.status(200).json(response.data);
     })
     .catch(err => {
-      console.log('here');
       res.status(500).json({ message: 'Error Fetching Jokes', error: err });
     });
 }

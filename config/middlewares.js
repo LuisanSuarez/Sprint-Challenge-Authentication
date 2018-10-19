@@ -12,11 +12,8 @@ module.exports = {
 function authenticate(req, res, next) {
   const token = req.get('Authorization');
   if (token) {
-    console.log('we have a token');
     jwt.verify(token, jwtKey, (err, decoded) => {
-      console.log('The Error:', err);
       if (err) return res.status(401).json(err);
-      console.log('we have no error');
       req.decoded = decoded;
 
       next();
